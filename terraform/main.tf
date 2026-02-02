@@ -167,10 +167,11 @@ locals {
 }
 
 locals {
-  web_sg_id = var.reuse_existing_sg
-    ? data.aws_security_group.existing[0].id
-    : aws_security_group.web[0].id
+  web_sg_id = var.reuse_existing_sg ?
+    data.aws_security_group.existing[0].id :
+    aws_security_group.web[0].id
 }
+
 
 
 ########################################
