@@ -149,18 +149,69 @@ resource "aws_instance" "nginx" {
 ########################################
 # Variables
 ########################################
-variable "aws_region" { type = string }
-variable "environment" { type = string }
-variable "project_name" { type = string }
-variable "vpc_id" { type = string }
-variable "subnet_id" { type = string, default = "" }
-variable "reuse_existing_sg" { type = bool, default = false }
-variable "existing_sg_name" { type = string, default = "" }
-variable "jenkins_ip" { type = string }
-variable "instance_type" { type = string }
-variable "apache_instance_count" { type = number, default = 1 }
-variable "nginx_instance_count" { type = number, default = 1 }
-variable "keypair_name" { type = string }
-variable "create_key_pair" { type = bool, default = false }
-variable "public_key_openssh" { type = string, default = "" }
-variable "ansible_user" { type = string }
+variable "aws_region" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "project_name" {
+  type = string
+}
+
+variable "vpc_id" {
+  type = string
+}
+
+variable "subnet_id" {
+  type    = string
+  default = ""
+}
+
+variable "reuse_existing_sg" {
+  type    = bool
+  default = false
+}
+
+variable "existing_sg_name" {
+  type    = string
+  default = ""
+}
+
+variable "jenkins_ip" {
+  type = string
+}
+
+variable "instance_type" {
+  type = string
+}
+
+variable "apache_instance_count" {
+  type    = number
+  default = 1
+}
+
+variable "nginx_instance_count" {
+  type    = number
+  default = 1
+}
+
+variable "keypair_name" {
+  type = string
+}
+
+variable "create_key_pair" {
+  type    = bool
+  default = false
+}
+
+variable "public_key_openssh" {
+  type    = string
+  default = ""
+}
+
+variable "ansible_user" {
+  type = string
+}
