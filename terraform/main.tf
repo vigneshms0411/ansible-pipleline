@@ -193,7 +193,7 @@ resource "aws_security_group" "web" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["3.110.85.249/32"]
+    cidr_blocks = ["http://3.6.38.53//32"]
   }
 
   # Allow HTTP from anywhere
