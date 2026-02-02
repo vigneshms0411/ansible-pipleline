@@ -91,7 +91,39 @@ locals {
   }
 }
 
-# Prevent running EC2 if no subnet
+########################################
+# Debug Outputs
+########################################
+output "vpc_id_used" {
+  value = data.aws_vpc.selected.id
+}
+
+output "subnet_used" {
+  value = local.subnet_to_use
+}
+
+output "security_group_used" {
+  value = local.web_sg_id
+}
+
+########################################
+# Key Pair (Optional Creation)
+########################################
+resource "tls_private_key" "this" {
+  count     = var.create_key_pair && var.public_key_openssh == "" ? 1 : 0
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "this" {
+  count      = var.create_key_pair ? 1 : 0
+  key_name   = var.keypair_name
+  public_key = var.public_key_openssh != "" ? var.public_key_openssh : tls_private_key.this[0].public_key_openssh
+}
+
+########################################
+# EC2 Instances
+########################################
 resource "aws_instance" "apache" {
   count         = local.subnet_to_use != null ? var.apache_instance_count : 0
   ami           = "ami-0f5ee92e2d63afc18"
@@ -112,21 +144,6 @@ resource "aws_instance" "nginx" {
   vpc_security_group_ids = [local.web_sg_id]
 
   tags = merge(local.common_tags, { Name = "nginx-${count.index}" })
-}
-
-########################################
-# Key Pair (Optional Creation)
-########################################
-resource "tls_private_key" "this" {
-  count     = var.create_key_pair && var.public_key_openssh == "" ? 1 : 0
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "aws_key_pair" "this" {
-  count      = var.create_key_pair ? 1 : 0
-  key_name   = var.keypair_name
-  public_key = var.public_key_openssh != "" ? var.public_key_openssh : tls_private_key.this[0].public_key_openssh
 }
 
 ########################################
