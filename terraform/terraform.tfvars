@@ -19,5 +19,8 @@ nginx_instance_count  = 2
 # Key pair management
 keypair_name          = "deploy-key"
 create_key_pair       = true
-public_key_openssh    = ""    # leave empty to auto-generate a new keypair (PEM will be saved locally)
+public_key_openssh    = ""
 ansible_user          = "ubuntu"
+
+# Optional (for local terraform plan)
+jenkins_ip            = "3.6.38.53"
