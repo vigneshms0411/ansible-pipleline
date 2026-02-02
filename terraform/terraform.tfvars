@@ -7,7 +7,7 @@ jenkins_ip            = "http://65.0.94.171/"
 keypair_name          = "sample-25-11-2005"                  # Must exist if create_key_pair=false
 project_name          = "rentify"
 environment           = "dev"
-instance_type         = "t2.micro"
+instance_type         = "t3.micro"
 apache_instance_count = 1
 nginx_instance_count  = 1
 create_key_pair       = false
