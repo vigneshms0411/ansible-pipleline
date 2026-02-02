@@ -1,5 +1,5 @@
 aws_region            = "ap-south-1"
-vpc_id                = "vpc-0abcd1234ef567890"  # Replace with your actual VPC ID
+vpc_id                = "vpc-0b1ab3e37e8c4f8e2"  # Replace with your actual VPC ID
 subnet_id             = ""                        # Leave empty to auto-pick a subnet
 reuse_existing_sg     = false
 existing_sg_name      = ""                        # Only needed if reuse_existing_sg=true
