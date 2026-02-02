@@ -100,9 +100,11 @@ variable "instance_type" {
 }
 
 variable "jenkins_ip" {
-  description = "Public IP of Jenkins agent allowed to SSH (without /32)"
   type        = string
+  description = "Public IP of Jenkins agent"
+  default     = "0.0.0.0" # CI will override
 }
+
 
 ########################################
 # Locals
@@ -127,6 +129,12 @@ data "aws_subnets" "in_vpc" {
     name   = "vpc-id"
     values = [data.aws_vpc.selected.id]
   }
+}
+
+data "aws_security_group" "existing" {
+  count = var.reuse_existing_sg ? 1 : 0
+  name  = var.existing_sg_name
+  vpc_id = data.aws_vpc.selected.id
 }
 
 data "aws_ami" "ubuntu" {
@@ -157,6 +165,13 @@ locals {
     length(data.aws_subnets.in_vpc.ids) > 0 ? data.aws_subnets.in_vpc.ids[0] : ""
   )
 }
+
+locals {
+  web_sg_id = var.reuse_existing_sg
+    ? data.aws_security_group.existing[0].id
+    : aws_security_group.web[0].id
+}
+
 
 ########################################
 # Key Pair Management
@@ -193,33 +208,34 @@ resource "aws_security_group" "web" {
   vpc_id      = data.aws_vpc.selected.id
 
   # Allow SSH only from Jenkins agent IP
+resource "aws_security_group" "web" {
+  count       = var.reuse_existing_sg ? 0 : 1
+  name        = "${var.project_name}-web-sg-${var.environment}"
+  description = "Web SG for ${var.project_name}"
+  vpc_id      = data.aws_vpc.selected.id
+
   ingress {
-    description = "SSH from Jenkins agent"
+    description = "SSH from Jenkins"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["${var.jenkins_ip}/32"]
   }
 
-  # Allow HTTP from anywhere
   ingress {
-    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow HTTPS from anywhere
   ingress {
-    description = "HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -227,14 +243,9 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-web-sg-${var.environment}"
-  })
+  tags = local.common_tags
 }
 
-locals {
-  web_sg_id = aws_security_group.web.id
-}
 
 ########################################
 # EC2 Instances - Apache
