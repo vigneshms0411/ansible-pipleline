@@ -32,7 +32,6 @@ data "aws_security_group" "existing" {
 ########################################
 # Security Group (Create only if needed)
 ########################################
-
 resource "aws_security_group" "web" {
   count       = var.reuse_existing_sg ? 0 : 1
   name        = "${var.project_name}-web-sg-${var.environment}"
@@ -77,13 +76,14 @@ resource "aws_security_group" "web" {
 }
 
 ########################################
-# Locals (IMPORTANT – FIXED TERNARY)
+# Locals (Safe Ternary)
 ########################################
-
 locals {
-  web_sg_id = var.reuse_existing_sg ? data.aws_security_group.existing[0].id : aws_security_group.web[0].id
+  web_sg_id = var.reuse_existing_sg && length(data.aws_security_group.existing) > 0 ? data.aws_security_group.existing[0].id : aws_security_group.web[0].id
 
-  subnet_to_use = var.subnet_id != "" ? var.subnet_id : data.aws_subnets.selected.ids[0]
+  subnet_to_use = var.subnet_id != "" ? var.subnet_id : (
+    length(data.aws_subnets.selected.ids) > 0 ? data.aws_subnets.selected.ids[0] : null
+  )
 
   common_tags = {
     Project     = var.project_name
@@ -91,10 +91,32 @@ locals {
   }
 }
 
+# Prevent running EC2 if no subnet
+resource "aws_instance" "apache" {
+  count         = local.subnet_to_use != null ? var.apache_instance_count : 0
+  ami           = "ami-0f5ee92e2d63afc18"
+  instance_type = var.instance_type
+  subnet_id     = local.subnet_to_use
+  key_name      = var.keypair_name
+  vpc_security_group_ids = [local.web_sg_id]
+
+  tags = merge(local.common_tags, { Name = "apache-${count.index}" })
+}
+
+resource "aws_instance" "nginx" {
+  count         = local.subnet_to_use != null ? var.nginx_instance_count : 0
+  ami           = "ami-0f5ee92e2d63afc18"
+  instance_type = var.instance_type
+  subnet_id     = local.subnet_to_use
+  key_name      = var.keypair_name
+  vpc_security_group_ids = [local.web_sg_id]
+
+  tags = merge(local.common_tags, { Name = "nginx-${count.index}" })
+}
+
 ########################################
 # Key Pair (Optional Creation)
 ########################################
-
 resource "tls_private_key" "this" {
   count     = var.create_key_pair && var.public_key_openssh == "" ? 1 : 0
   algorithm = "RSA"
@@ -108,148 +130,20 @@ resource "aws_key_pair" "this" {
 }
 
 ########################################
-# EC2 Instances
+# Variables
 ########################################
-
-resource "aws_instance" "apache" {
-  count         = var.apache_instance_count
-  ami           = "ami-0f5ee92e2d63afc18"
-  instance_type = var.instance_type
-  subnet_id     = local.subnet_to_use
-  key_name      = var.keypair_name
-
-  vpc_security_group_ids = [local.web_sg_id]
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "apache-${count.index}"
-    }
-  )
-}
-
-resource "aws_instance" "nginx" {
-  count         = var.nginx_instance_count
-  ami           = "ami-0f5ee92e2d63afc18"
-  instance_type = var.instance_type
-  subnet_id     = local.subnet_to_use
-  key_name      = var.keypair_name
-
-  vpc_security_group_ids = [local.web_sg_id]
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "nginx-${count.index}"
-    }
-  )
-}
-########################################
-# Core / Environment
-########################################
-
-variable "aws_region" {
-  type        = string
-  description = "AWS region"
-}
-
-variable "environment" {
-  type        = string
-  description = "Environment name"
-}
-
-variable "project_name" {
-  type        = string
-  description = "Project name"
-}
-
-########################################
-# Network
-########################################
-
-variable "vpc_id" {
-  type        = string
-  description = "VPC ID"
-}
-
-variable "subnet_id" {
-  type        = string
-  description = "Subnet ID (optional)"
-  default     = ""
-}
-
-########################################
-# Security Group
-########################################
-
-variable "reuse_existing_sg" {
-  type        = bool
-  description = "Reuse an existing security group"
-  default     = false
-}
-
-variable "existing_sg_name" {
-  type        = string
-  description = "Existing security group name"
-  default     = ""
-}
-
-########################################
-# Jenkins / CI
-########################################
-
-variable "jenkins_ip" {
-  type        = string
-  description = "Public IP of Jenkins agent"
-}
-
-########################################
-# EC2
-########################################
-
-variable "instance_type" {
-  type        = string
-  description = "EC2 instance type"
-}
-
-variable "apache_instance_count" {
-  type        = number
-  description = "Number of Apache instances"
-  default     = 1
-}
-
-variable "nginx_instance_count" {
-  type        = number
-  description = "Number of Nginx instances"
-  default     = 1
-}
-
-########################################
-# Key Pair
-########################################
-
-variable "keypair_name" {
-  type        = string
-  description = "Key pair name"
-}
-
-variable "create_key_pair" {
-  type        = bool
-  description = "Create key pair or not"
-  default     = false
-}
-
-variable "public_key_openssh" {
-  type        = string
-  description = "Public SSH key"
-  default     = ""
-}
-
-########################################
-# Ansible
-########################################
-
-variable "ansible_user" {
-  type        = string
-  description = "Ansible SSH user"
-}
+variable "aws_region" { type = string }
+variable "environment" { type = string }
+variable "project_name" { type = string }
+variable "vpc_id" { type = string }
+variable "subnet_id" { type = string, default = "" }
+variable "reuse_existing_sg" { type = bool, default = false }
+variable "existing_sg_name" { type = string, default = "" }
+variable "jenkins_ip" { type = string }
+variable "instance_type" { type = string }
+variable "apache_instance_count" { type = number, default = 1 }
+variable "nginx_instance_count" { type = number, default = 1 }
+variable "keypair_name" { type = string }
+variable "create_key_pair" { type = bool, default = false }
+variable "public_key_openssh" { type = string, default = "" }
+variable "ansible_user" { type = string }
