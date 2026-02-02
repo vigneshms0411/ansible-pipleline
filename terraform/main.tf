@@ -144,3 +144,112 @@ resource "aws_instance" "nginx" {
     }
   )
 }
+########################################
+# Core / Environment
+########################################
+
+variable "aws_region" {
+  type        = string
+  description = "AWS region"
+}
+
+variable "environment" {
+  type        = string
+  description = "Environment name"
+}
+
+variable "project_name" {
+  type        = string
+  description = "Project name"
+}
+
+########################################
+# Network
+########################################
+
+variable "vpc_id" {
+  type        = string
+  description = "VPC ID"
+}
+
+variable "subnet_id" {
+  type        = string
+  description = "Subnet ID (optional)"
+  default     = ""
+}
+
+########################################
+# Security Group
+########################################
+
+variable "reuse_existing_sg" {
+  type        = bool
+  description = "Reuse an existing security group"
+  default     = false
+}
+
+variable "existing_sg_name" {
+  type        = string
+  description = "Existing security group name"
+  default     = ""
+}
+
+########################################
+# Jenkins / CI
+########################################
+
+variable "jenkins_ip" {
+  type        = string
+  description = "Public IP of Jenkins agent"
+}
+
+########################################
+# EC2
+########################################
+
+variable "instance_type" {
+  type        = string
+  description = "EC2 instance type"
+}
+
+variable "apache_instance_count" {
+  type        = number
+  description = "Number of Apache instances"
+  default     = 1
+}
+
+variable "nginx_instance_count" {
+  type        = number
+  description = "Number of Nginx instances"
+  default     = 1
+}
+
+########################################
+# Key Pair
+########################################
+
+variable "keypair_name" {
+  type        = string
+  description = "Key pair name"
+}
+
+variable "create_key_pair" {
+  type        = bool
+  description = "Create key pair or not"
+  default     = false
+}
+
+variable "public_key_openssh" {
+  type        = string
+  description = "Public SSH key"
+  default     = ""
+}
+
+########################################
+# Ansible
+########################################
+
+variable "ansible_user" {
+  type        = string
+  description = "Ansible SSH user"
+}
