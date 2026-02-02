@@ -3,7 +3,7 @@
   become: true
   vars:
     apache_root: /var/www/html
-    app_repo_url: "https://github.com/Krish-venom/Weather-site.git"
+    app_repo_url: "https://github.com/vigneshms0411/jenkins.git"
     app_branch: "main"
   tasks:
     - name: Install Apache and Git
