@@ -99,6 +99,11 @@ variable "instance_type" {
   default = "t3.micro"
 }
 
+variable "jenkins_ip" {
+  description = "Public IP of Jenkins agent allowed to SSH (without /32)"
+  type        = string
+}
+
 ########################################
 # Locals
 ########################################
@@ -193,7 +198,7 @@ resource "aws_security_group" "web" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["http://3.6.38.53//32"]
+    cidr_blocks = ["${var.jenkins_ip}/32"]
   }
 
   # Allow HTTP from anywhere
