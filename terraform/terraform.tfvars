@@ -1,26 +1,15 @@
-# Region & environment
 aws_region            = "ap-south-1"
-environment           = "production"
-project_name          = "devops-webapp"
-
-# Your VPC
-vpc_id                = "vpc-0bb695c41dc9db0a4"
-subnet_id             = ""   # leave empty to auto-pick the first subnet in that VPC
-
-# Security group behavior
-reuse_existing_sg     = true
-existing_sg_name      = "web-server-sg"
-
-# EC2 & SSH
-instance_type         = "t3.micro"
-apache_instance_count = 2
-nginx_instance_count  = 2
-
-# Key pair management
-keypair_name          = "deploy-key"
-create_key_pair       = true
+vpc_id                = "vpc-0abcd1234ef567890"  # Replace with your actual VPC ID
+subnet_id             = ""                        # Leave empty to auto-pick a subnet
+reuse_existing_sg     = false
+existing_sg_name      = ""                        # Only needed if reuse_existing_sg=true
+jenkins_ip            = "http://65.0.94.171/"
+keypair_name          = "my-key"                  # Must exist if create_key_pair=false
+project_name          = "rentify"
+environment           = "dev"
+instance_type         = "t2.micro"
+apache_instance_count = 1
+nginx_instance_count  = 1
+create_key_pair       = false
 public_key_openssh    = ""
 ansible_user          = "ubuntu"
-
-# Optional (for local terraform plan)
-jenkins_ip            = "3.6.38.53"
